@@ -1,7 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { BrowserRouter, Route } from 'react-router-dom';
 import './index.css';
 import AuthorQuiz from './AuthorQuiz.js';
+import AddAuthorForm from './AddAuthorForm.js';
 import { shuffle, sample } from 'underscore';
 import * as serviceWorker from './serviceWorker';
 
@@ -40,8 +42,8 @@ const authors = [
 	}
 ]
 
-function getTurnData(authors) {
-	const allBooks = authors.reduce((p, c, i) => {
+function getTurnData(author) {
+	const allBooks = author.reduce((p, c, i) => {
 		return p.concat(c.books);
 	}, []);
 	const fourRandomBooks = shuffle(allBooks).slice(0, 4);
@@ -49,15 +51,38 @@ function getTurnData(authors) {
 
 	return {
 		books: fourRandomBooks,
-		author: authors.find((authors) => authors.books.some((title) => title === answer))
+		author: author.find((author) => author.books.some((title) => title === answer))
 	}
 }
 
 const state = {
-	turnData: getTurnData(authors)
+	turnData: getTurnData(authors),
+	highlight: '',
 }
 
-ReactDOM.render(<AuthorQuiz {...state} />, document.getElementById('root'));
+function onAnswerSelected(answer) {
+	const isCorrect = state.turnData.author.books.some((book) => book === answer);
+	state.highlight = isCorrect? 'correct' : 'wrong';
+	render();
+}
+
+function App() {
+	return <AuthorQuiz {...state} highlight={state.highlight} onAnswerSelected={onAnswerSelected} />;
+}
+
+function render() {
+	ReactDOM.render(
+		<BrowserRouter>
+			<React.Fragment>
+				<Route exact path='/' component={App} />
+				<Route path='/add' component={AddAuthorForm} />
+			</React.Fragment>
+		</BrowserRouter>,
+		document.getElementById('root')
+	);
+}
+render();
+
 
 // If you want your app to work offline and load faster, you can change
 // unregister() to register() below. Note this comes with some pitfalls.
